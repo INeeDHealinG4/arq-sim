@@ -1,13 +1,12 @@
-//
-// Created by Marcel on 03.11.2026.
-//
+#ifndef CRC_H
+#define CRC_H
 
-#ifndef ARQ_SIM_CRC_H
-#define ARQ_SIM_CRC_H
+#include <stdint.h>
+#include <stddef.h>
 
-#endif //ARQ_SIM_CRC_H
-void CRC8() {}
 
-void CRC16() {}
+uint32_t calculate_crc32(const uint8_t *data, size_t length);
+uint16_t calculate_crc16(const uint8_t *data, size_t length);
+uint8_t  calculate_crc8(const uint8_t *data, size_t length);
 
-void CRC32() {}
+#endif
