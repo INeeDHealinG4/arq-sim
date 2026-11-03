@@ -14,4 +14,5 @@ add_executable(Arq_sim main.c
         FeedbackChannel.c
         ARQ.h
         CRC.h
+        FileLoader.h
 )
