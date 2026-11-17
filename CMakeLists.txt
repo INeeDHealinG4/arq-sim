@@ -11,8 +11,9 @@ add_executable(Arq_sim main.c
         Hamming.c
         ARQ.c
         DetectionDecoder.c
-        FeedbackChannel.c
+        Channel.c
         ARQ.h
         CRC.h
         FileLoader.h
+        DetectionDecoder.h
 )
