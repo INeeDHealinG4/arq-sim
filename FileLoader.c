@@ -1,79 +1,39 @@
 #include <stddef.h>
 #include <stdio.h>
-#include <stdlib.h>
+#include <stdint.h>
 #include "ARQ.h"
-#include "CRC.h"
-#include "BSC.h"
 
-void LoadingAndWriting(size_t L_payload, const char *filename, uint8_t crc_type, double ber){
-    FILE* ReadAnyToBinary;
-    FILE* WriteToBinary;
-    ReadAnyToBinary = fopen(filename, "rb");
+void LoadingAndWriting(size_t L_payload, const char *filename, uint8_t crc_type, double ber) {
+    FILE *ReadAnyToBinary = fopen(filename, "rb");
     if (ReadAnyToBinary == NULL) {
-        printf("Error opening file\n");
-    }
-    else {
-        printf("Plik zostal otwarty\n");
+        perror("Blad otwarcia pliku wejściowego");
+        return;
     }
 
-    //rozmiar pliku i liczba bramek
     fseek(ReadAnyToBinary, 0, SEEK_END);
     long file_size = ftell(ReadAnyToBinary);
     rewind(ReadAnyToBinary);
 
     size_t frames = (file_size + L_payload - 1) / L_payload;
-
     printf("Rozmiar pliku: %ld bajtow\n", file_size);
     printf("Przewidywana liczba ramek: %zu\n\n", frames);
 
-    WriteToBinary = fopen("filename.txt", "wb");
+    FILE *WriteToBinary = fopen("wyjscie.txt", "wb");
     if (WriteToBinary == NULL) {
-        printf("File does not exist... creating one\n");
-    }
-    unsigned char *buffer = malloc(L_payload);
-    if (buffer == NULL) {
-        printf("Błąd alokacji pamięci");
+        perror("Blad tworzenia pliku wyjsciowego");
         fclose(ReadAnyToBinary);
         return;
     }
-    size_t bytes_read = 0;
-    uint16_t frame_seq = 0;
 
-   while ((bytes_read = fread(buffer, 1, L_payload, ReadAnyToBinary)) > 0) {
-        uint32_t current_CRC = 0;
+    // Wywołanie protokołu bezpośrednio z modułu ARQ
+    ArqStats stats = Stop_And_Wait(ReadAnyToBinary, WriteToBinary, L_payload, crc_type, ber);
 
-       FrameDynamic *Frame = create_frame(FRAME_TYPE_DATA,frame_seq, buffer, (uint16_t)bytes_read, crc_type);
-       if (Frame == NULL) {
-           printf("Błąd alokacji ramki nr %u\n", frame_seq);
-           break;
-       }
+    printf("\nPODSUMOWANIE TRANSMISJI (Stop-and-Wait)\n");
+    printf("Wyslane ramki danych:       %zu\n", stats.frames_sent);
+    printf("Retransmisje:               %zu\n", stats.retransmissions);
+    printf("Uszkodzone ramki DATA:      %zu\n", stats.corrupted_data_frames);
+    printf("Uszkodzone ramki ACK:       %zu\n", stats.corrupted_ack_frames);
 
-       size_t total_frame_size = sizeof(FrameDynamic) + bytes_read;
-
-       /*payload jest alokowany dynamicznie, a sizeof nie dolicza
-       payloadu jesli jest alokowany dynamicznie, więc jeślibysmy nie dodali tych bitów to by nam ciągle pokazywało ze
-       total_frame_size wynosi równo 11 bitów*/
-
-       //Kanał BSC
-       bsc(Frame, total_frame_size, ber);
-       uint8_t *bsc_payload = (uint8_t *)Frame + sizeof(FrameDynamic);
-
-       //Sprawdzanie błędów
-       int error = check_error(Frame, crc_type, total_frame_size);
-
-       if (error) {
-           printf("Ramka %d: Wykryto blad? TAK (NACK)\n", frame_seq);
-       } else {
-           printf("Ramka %d: Wykryto blad? NIE (ACK)\n", frame_seq);
-       }
-
-       fwrite(Frame, total_frame_size, 1, WriteToBinary);
-
-       free(Frame);
-       frame_seq++;
-    }
-
-    free(buffer);
     fclose(ReadAnyToBinary);
     fclose(WriteToBinary);
 }
