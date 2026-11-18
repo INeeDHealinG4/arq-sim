@@ -77,4 +77,5 @@ void LoadingAndWriting(size_t L_payload, const char *filename, uint8_t crc_type,
     fclose(ReadAnyToBinary);
     fclose(WriteToBinary);
 
+
 }
