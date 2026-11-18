@@ -12,8 +12,8 @@ int main(void) {
     printf("Start\n");
 
     //Parametry
-    size_t payload_size = 64; //Rozmiar paczki danych w bajtach
-    const char *input_file = "dane.txt"; //Nazwa pliku wejściowego
+    size_t payload_size = 16; //Rozmiar paczki danych w bajtach
+    const char *input_file = "dane.bin"; //Nazwa pliku wejściowego
     uint8_t crc_type = 16; //Wybór typu CRC
     double ber = 0.001; //szans na błąd w kanale BSC
 
@@ -21,3 +21,7 @@ int main(void) {
 
     return 0;
 }
+
+// $bytes = New-Object byte[] (500 * 1024); (New-Object Random).NextBytes($bytes); [IO.File]::WriteAllBytes("dane.bin", $bytes)
+
+//ta komenda w terminalu generuje nowy plik o nazwie dane.bin (zeby zadzialalo, to trzeba wrzucic do folderu "cmake-build-debug")
