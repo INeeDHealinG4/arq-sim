@@ -37,4 +37,3 @@ typedef struct {
 FrameDynamic* create_frame(uint8_t type, uint16_t seq_number, const uint8_t *data, uint16_t len, uint8_t crc_type);
 
 #endif //ARQ_SIM_ARQ_H
-
