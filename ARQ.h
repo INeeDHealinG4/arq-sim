@@ -18,6 +18,6 @@ typedef struct {
 } FrameDynamic;
 #pragma pack(pop)
 
-FrameDynamic* Ramka(int frame_seq, size_t bytes_read, uint32_t CRC,uint8_t crc_type);
+FrameDynamic* Ramka(int frame_seq, size_t bytes_read, uint32_t CRC, uint8_t crc_type, const uint8_t *payload);
 
 #endif //ARQ_SIM_ARQ_H
