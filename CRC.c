@@ -1,7 +1,7 @@
 #include "CRC.h"
 
-#define CRC32_POLYNOMIAL 0xEDB88320UL //rozne wielomiany
-#define CRC16_POLYNOMIAL 0x8408
+#define CRC32_POLYNOMIAL 0xEDB88320UL //zamienic na 0x04C11DB7
+#define CRC16_POLYNOMIAL 0x8408 //zamienic na 0x1021
 #define CRC8_POLYNOMIAL  0x8C
 
 // Osobne tablice dla każdego rodzaju CRC
