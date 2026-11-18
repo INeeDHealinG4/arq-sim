@@ -19,7 +19,5 @@ int main(void) {
 
     LoadingAndWriting(payload_size, input_file, crc_type, ber);
 
-    //liczba godzin spędzonch nad tym projektem(Marcel) -
-    //liczba godzin spędzonch nad tym projektem(Aleksandra) -
     return 0;
 }

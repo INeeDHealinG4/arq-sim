@@ -37,30 +37,29 @@ void LoadingAndWriting(size_t L_payload, const char *filename, uint8_t crc_type,
         return;
     }
     size_t bytes_read = 0;
-    int frame_seq = 0;
+    uint16_t frame_seq = 0;
 
    while ((bytes_read = fread(buffer, 1, L_payload, ReadAnyToBinary)) > 0) {
         uint32_t current_CRC = 0;
 
-        // Wybór odpowiedniej funkcji CRC bazując na typie
-        if (crc_type == 8) {
-            current_CRC = calculate_crc8(buffer, bytes_read);
-        } else if (crc_type == 16) {
-            current_CRC = calculate_crc16(buffer, bytes_read);
-        } else {
-            current_CRC = calculate_crc32(buffer, bytes_read);
-        }
+       FrameDynamic *Frame = create_frame(FRAME_TYPE_DATA,frame_seq, buffer, (uint16_t)bytes_read, crc_type);
+       if (Frame == NULL) {
+           printf("Błąd alokacji ramki nr %u\n", frame_seq);
+           break;
+       }
 
-        // Tworzenie ramki (zdefiniowanej w ARQ.h)
-        FrameDynamic *Frame = Ramka(frame_seq, bytes_read, current_CRC, crc_type, buffer);
+       size_t total_frame_size = sizeof(FrameDynamic) + bytes_read;
+
+       /*payload jest alokowany dynamicznie, a sizeof nie dolicza
+       payloadu jesli jest alokowany dynamicznie, więc jeślibysmy nie dodali tych bitów to by nam ciągle pokazywało ze
+       total_frame_size wynosi równo 11 bitów*/
 
        //Kanał BSC
-       size_t frame_size = sizeof(FrameDynamic) + bytes_read;
-       bsc(Frame, frame_size, ber);
+       bsc(Frame, total_frame_size, ber);
        uint8_t *bsc_payload = (uint8_t *)Frame + sizeof(FrameDynamic);
 
        //Sprawdzanie błędów
-       int error = check_error(Frame, crc_type, bsc_payload, bytes_read);
+       int error = check_error(Frame, crc_type, total_frame_size);
 
        if (error) {
            printf("Ramka %d: Wykryto blad? TAK (NACK)\n", frame_seq);
@@ -68,7 +67,7 @@ void LoadingAndWriting(size_t L_payload, const char *filename, uint8_t crc_type,
            printf("Ramka %d: Wykryto blad? NIE (ACK)\n", frame_seq);
        }
 
-       fwrite(Frame, frame_size, 1, WriteToBinary);
+       fwrite(Frame, total_frame_size, 1, WriteToBinary);
 
        free(Frame);
        frame_seq++;

@@ -1,10 +1,11 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <string.h>
 #include "ARQ.h"
 #include "CRC.h"
 
-//przekłamywanie bitów szansą BER
+//przekłamywanie bitów z szansą BER
 void bsc(void *Frame, size_t frame_size, double ber) {
     uint8_t *bsc_frame = (uint8_t *)Frame;
     for (size_t i = 0; i < frame_size; i++) {
@@ -18,16 +19,29 @@ void bsc(void *Frame, size_t frame_size, double ber) {
 }
 
 //Sprawdzenie czy wykryto błąd
-int check_error(const FrameDynamic *received_frame, uint8_t crc_type, const uint8_t *payload_buffer, size_t payload_len) {
+int check_error(const FrameDynamic *received_frame, uint8_t crc_type, size_t total_size) {
+    FrameDynamic *temp_frame = malloc(total_size);
+    if (temp_frame == NULL) {
+        return 1; //W razie błędu alokacji - ramka uszkodzoną
+    }
+    memcpy(temp_frame, received_frame, total_size);
+
+    uint32_t received_crc = temp_frame->CRC;
+    temp_frame->CRC = 0; //Wyzerowanie  CRC
+
     uint32_t new_crc = 0;
 
-    if (crc_type == 8) {
-        new_crc = calculate_crc8(payload_buffer, payload_len);
-    } else if (crc_type == 16) {
-        new_crc = calculate_crc16(payload_buffer, payload_len);
-    } else {
-        new_crc = calculate_crc32(payload_buffer, payload_len);
+    //CRC z całej ramki (nagłówek + payload)
+    switch(crc_type) {
+        case 8: new_crc = calculate_crc8((uint8_t*)temp_frame, total_size);
+            break;
+        case 16: new_crc = calculate_crc16((uint8_t*)temp_frame, total_size);
+            break;
+        default: new_crc = calculate_crc32((uint8_t*)temp_frame, total_size);
+            break;
     }
+
+    free(temp_frame);
 
     if (new_crc != received_frame->CRC) {
         return 1; //Wykryto błąd
