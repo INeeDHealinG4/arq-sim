@@ -34,5 +34,4 @@ FrameDynamic* create_frame(uint8_t type, uint16_t seq_number, const uint8_t *dat
     return f1;
 }
 void Stop_And_Wait() {
-
 }
